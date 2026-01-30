@@ -1,42 +1,11 @@
 import z from 'zod';
 import { axios } from '../config/axios';
 import { useState } from 'react';
-
-// export default function RegisterPage() {
-//   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-//   };
-
-//   return (
-//     <div>
-//       <form className="grid gap-6" onSubmit={handleSubmit}>
-//         <div>
-//           <label htmlFor="">First Name</label>
-//           <input type="text" className="border px-3 py-1.5 w-full" />
-//         </div>
-
-//         <div>
-//           <label htmlFor="">Last Name</label>
-//           <input type="text" className="border px-3 py-1.5 w-full" />
-//         </div>
-
-//         <div>
-//           <label htmlFor="">Email</label>
-//           <input type="text" className="border px-3 py-1.5 w-full" />
-//         </div>
-
-//         <div>
-//           <label htmlFor="">Password</label>
-//           <input type="text" className="border px-3 py-1.5 w-full" />
-//         </div>
-
-//         <div>
-//           <button className="bg-amber-500 px-4 py-2 w-full">Register</button>
-//         </div>
-//       </form>
-//     </div>
-//   );
-// }
+import { AxiosError } from 'axios';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const registerSchema = z.object({
   firstName: z.string().min(1, 'first name cannot be empty'),
@@ -52,69 +21,56 @@ const registerSchema = z.object({
 
 type RegisterInput = z.infer<typeof registerSchema>;
 
-type Test = z.core.$ZodFlattenedError<
-  z.output<typeof registerSchema>
->['fieldErrors'];
-
 export default function RegisterPage() {
-  const [input, setInput] = useState<RegisterInput>({
-    email: '',
-    firstName: '',
-    lastName: '',
-    password: ''
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError
+  } = useForm<RegisterInput>({
+    defaultValues: { email: '', firstName: '', lastName: '', password: '' },
+    resolver: zodResolver(registerSchema)
   });
 
-  const [inputError, setInputError] = useState<
-    Partial<Record<keyof RegisterInput, string[]>>
-  >({});
+  const navigate = useNavigate();
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChangeInput = (
-    e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>
-  ) => {
-    setInput({ ...input, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const { success, data, error } = registerSchema.safeParse(input);
-    if (!success) {
-      // console.log(z.flattenError(error));
-      // const nextError: Partial<RegisterInput> = {};
-      // for (const key in z.flattenError(error).fieldErrors) {
-      //   const value =
-      //     z.flattenError(error).fieldErrors[
-      //       key as keyof Partial<RegisterInput>
-      //     ];
-      //   if (value) {
-      //     nextError[key as keyof Partial<RegisterInput>] = value[0];
-      //   }
-      // }
-      // setInputError({ ...inputError, ...nextError });
-      setInputError(z.flattenError(error).fieldErrors);
-      return;
+  const onSubmit: SubmitHandler<RegisterInput> = async (data) => {
+    try {
+      await axios.post('/auth/register', data);
+      toast.success(
+        'Your account has been created. Please log in to continue.'
+      );
+      navigate('/login');
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        if (err.status === 409) {
+          setError('email', { message: 'email already in use' });
+          return;
+        }
+        toast.error(err.response?.data.message);
+        return;
+      }
+      toast.error('something went wrong');
     }
-
-    setIsLoading(true);
-    const res = await axios.post('/auth/register', data);
-    setIsLoading(false);
-    console.log(res.data);
   };
 
   return (
     <div>
-      <form className="grid gap-6" onSubmit={handleSubmit}>
+      <form className="grid gap-6" onSubmit={handleSubmit(onSubmit)}>
         <div>
           <label htmlFor="">First Name</label>
           <input
             type="text"
             className="border px-3 py-1.5 w-full"
-            onChange={handleChangeInput}
-            value={input.firstName}
-            name="firstName"
+            {...register('firstName')} // {name: 'firstName', onChange: ƒ, onBlur: ƒ, ref: ƒ}
+            // name='firstName'
+            // onBlue = e => {}
+            // onChange = e => {}
+            // ref={}
           />
-          {inputError.firstName && <p>{inputError.firstName[0]}</p>}
+          {errors.firstName && (
+            <p className="text-red-500">{errors.firstName.message}</p>
+          )}
         </div>
 
         <div>
@@ -122,12 +78,10 @@ export default function RegisterPage() {
           <input
             type="text"
             className="border px-3 py-1.5 w-full"
-            onChange={handleChangeInput}
-            value={input.lastName}
-            name="lastName"
+            {...register('lastName')}
           />
-          {inputError.lastName && (
-            <p className="text-red-500">{inputError.lastName[0]}</p>
+          {errors.lastName && (
+            <p className="text-red-500">{errors.lastName.message}</p>
           )}
         </div>
 
@@ -136,34 +90,163 @@ export default function RegisterPage() {
           <input
             type="text"
             className="border px-3 py-1.5 w-full"
-            onChange={handleChangeInput}
-            value={input.email}
-            name="email"
+            {...register('email')}
           />
-          {inputError.email && <p>{inputError.email[0]}</p>}
+          {errors.email && (
+            <p className="text-red-500">{errors.email.message}</p>
+          )}
         </div>
 
-        <div>
+        <div className={errors.password ? 'text-red-500' : undefined}>
           <label htmlFor="">Password</label>
           <input
-            type="password"
+            type="text"
             className="border px-3 py-1.5 w-full"
-            onChange={handleChangeInput}
-            value={input.password}
-            name="password"
+            {...register('password')}
           />
-          {inputError.password && <p>{inputError.password[0]}</p>}
+          {errors.password && (
+            <p className="text-red-500">{errors.password.message}</p>
+          )}
         </div>
 
         <div>
           <button
             className="bg-amber-500 px-4 py-2 w-full"
-            disabled={isLoading}
+            disabled={isSubmitting}
           >
-            {isLoading ? 'Creating your account ...' : 'Register'}
+            {isSubmitting ? 'Creating your account ...' : 'Register'}
           </button>
         </div>
       </form>
     </div>
   );
 }
+
+// export default function RegisterPage() {
+//   const [input, setInput] = useState<RegisterInput>({
+//     email: '',
+//     firstName: '',
+//     lastName: '',
+//     password: ''
+//   });
+
+//   const [inputError, setInputError] = useState<
+//     Partial<Record<keyof RegisterInput, string[]>>
+//   >({});
+
+//   const [isLoading, setIsLoading] = useState(false);
+//   const navigate = useNavigate();
+
+//   const handleChangeInput = (
+//     e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>
+//   ) => {
+//     setInput({ ...input, [e.target.name]: e.target.value });
+//   };
+
+//   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+//     e.preventDefault();
+//     const { success, data, error } = registerSchema.safeParse(input);
+//     if (!success) {
+//       // console.log(z.flattenError(error));
+//       // const nextError: Partial<RegisterInput> = {};
+//       // for (const key in z.flattenError(error).fieldErrors) {
+//       //   const value =
+//       //     z.flattenError(error).fieldErrors[
+//       //       key as keyof Partial<RegisterInput>
+//       //     ];
+//       //   if (value) {
+//       //     nextError[key as keyof Partial<RegisterInput>] = value[0];
+//       //   }
+//       // }
+//       // setInputError({ ...inputError, ...nextError });
+//       setInputError(z.flattenError(error).fieldErrors);
+//       return;
+//     }
+
+//     try {
+//       setIsLoading(true);
+//       await axios.post('/auth/register', data);
+//       toast.success(
+//         'Your account has been created. Please log in to continue.'
+//       );
+//       navigate('/login');
+//     } catch (err) {
+//       if (err instanceof AxiosError) {
+//         if (err.status === 409) {
+//           setInputError({ email: ['email already in use'] });
+//           return;
+//         }
+//         toast.error(err.response?.data.message);
+//         return;
+//       }
+//       toast.error('something went wrong');
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <form className="grid gap-6" onSubmit={handleSubmit}>
+//         <div>
+//           <label htmlFor="">First Name</label>
+//           <input
+//             type="text"
+//             className="border px-3 py-1.5 w-full"
+//             onChange={handleChangeInput}
+//             value={input.firstName}
+//             name="firstName"
+//           />
+//           {inputError.firstName && <p>{inputError.firstName[0]}</p>}
+//         </div>
+
+//         <div>
+//           <label htmlFor="">Last Name</label>
+//           <input
+//             type="text"
+//             className="border px-3 py-1.5 w-full"
+//             onChange={handleChangeInput}
+//             value={input.lastName}
+//             name="lastName"
+//           />
+//           {inputError.lastName && (
+//             <p className="text-red-500">{inputError.lastName[0]}</p>
+//           )}
+//         </div>
+
+//         <div>
+//           <label htmlFor="">Email</label>
+//           <input
+//             type="text"
+//             className="border px-3 py-1.5 w-full"
+//             onChange={handleChangeInput}
+//             value={input.email}
+//             name="email"
+//           />
+//           {inputError.email && <p>{inputError.email[0]}</p>}
+//         </div>
+
+//         <div>
+//           <label htmlFor="">Password</label>
+//           <input
+//             type="password"
+//             className="border px-3 py-1.5 w-full"
+//             onChange={handleChangeInput}
+//             value={input.password}
+//             name="password"
+//           />
+//           {inputError.password && <p>{inputError.password[0]}</p>}
+//         </div>
+
+//         <div>
+//           <button
+//             className="bg-amber-500 px-4 py-2 w-full"
+//             disabled={isLoading}
+//           >
+//             {isLoading ? 'Creating your account ...' : 'Register'}
+//           </button>
+//         </div>
+//       </form>
+//     </div>
+//   );
+// }
