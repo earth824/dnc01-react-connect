@@ -52,6 +52,10 @@ const registerSchema = z.object({
 
 type RegisterInput = z.infer<typeof registerSchema>;
 
+type Test = z.core.$ZodFlattenedError<
+  z.output<typeof registerSchema>
+>['fieldErrors'];
+
 export default function RegisterPage() {
   const [input, setInput] = useState<RegisterInput>({
     email: '',
@@ -60,12 +64,11 @@ export default function RegisterPage() {
     password: ''
   });
 
-  const [inputError, setInputError] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-    password: ''
-  });
+  const [inputError, setInputError] = useState<
+    Partial<Record<keyof RegisterInput, string[]>>
+  >({});
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChangeInput = (
     e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>
@@ -77,20 +80,26 @@ export default function RegisterPage() {
     e.preventDefault();
     const { success, data, error } = registerSchema.safeParse(input);
     if (!success) {
-      const nextError: Partial<RegisterInput> = {};
-      for (const key in z.flattenError(error).fieldErrors) {
-        const value =
-          z.flattenError(error).fieldErrors[
-            key as keyof Partial<RegisterInput>
-          ];
-        if (value) {
-          nextError[key as keyof Partial<RegisterInput>] = value[0];
-        }
-      }
-      setInputError({ ...inputError, ...nextError });
+      // console.log(z.flattenError(error));
+      // const nextError: Partial<RegisterInput> = {};
+      // for (const key in z.flattenError(error).fieldErrors) {
+      //   const value =
+      //     z.flattenError(error).fieldErrors[
+      //       key as keyof Partial<RegisterInput>
+      //     ];
+      //   if (value) {
+      //     nextError[key as keyof Partial<RegisterInput>] = value[0];
+      //   }
+      // }
+      // setInputError({ ...inputError, ...nextError });
+      setInputError(z.flattenError(error).fieldErrors);
+      return;
     }
-    // const res = await axios.post('/auth/register');
-    // console.log(res);
+
+    setIsLoading(true);
+    const res = await axios.post('/auth/register', data);
+    setIsLoading(false);
+    console.log(res.data);
   };
 
   return (
@@ -105,6 +114,7 @@ export default function RegisterPage() {
             value={input.firstName}
             name="firstName"
           />
+          {inputError.firstName && <p>{inputError.firstName[0]}</p>}
         </div>
 
         <div>
@@ -116,6 +126,9 @@ export default function RegisterPage() {
             value={input.lastName}
             name="lastName"
           />
+          {inputError.lastName && (
+            <p className="text-red-500">{inputError.lastName[0]}</p>
+          )}
         </div>
 
         <div>
@@ -127,6 +140,7 @@ export default function RegisterPage() {
             value={input.email}
             name="email"
           />
+          {inputError.email && <p>{inputError.email[0]}</p>}
         </div>
 
         <div>
@@ -138,10 +152,16 @@ export default function RegisterPage() {
             value={input.password}
             name="password"
           />
+          {inputError.password && <p>{inputError.password[0]}</p>}
         </div>
 
         <div>
-          <button className="bg-amber-500 px-4 py-2 w-full">Register</button>
+          <button
+            className="bg-amber-500 px-4 py-2 w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Creating your account ...' : 'Register'}
+          </button>
         </div>
       </form>
     </div>
