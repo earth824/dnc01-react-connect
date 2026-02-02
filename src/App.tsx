@@ -10,22 +10,21 @@ function App() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const initAuth = async () => {
-  //     try {
-  //       const res = await axios.get('/auth/me');
-  //       const user = userSchema.parse(res.data.user);
-  //       setAuth(user);
-  //     } catch (err) {
-  //       console.log(err);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-  //   initAuth();
-  // }, []);
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const res = await axios.get('/auth/refresh');
+        setAuth(res.data.user, res.data.access_token);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    initAuth();
+  }, []);
 
-  // if (isLoading) return <h1>Loading...</h1>;
+  if (isLoading) return <h1>Loading...</h1>;
 
   return (
     <>
