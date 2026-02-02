@@ -5,7 +5,7 @@ import { axios } from '../config/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
-import { userSchema } from '../types/user.type';
+import { loginResponseSchema } from '../types/user.type';
 
 const loginSchema = z.object({
   email: z.email(),
@@ -30,8 +30,8 @@ export default function LoginPage() {
     // sent credentials to backend server
     try {
       const res = await axios.post('/auth/login', data);
-      const user = userSchema.parse(res.data.user);
-      setAuth(user);
+      const { user, access_token } = loginResponseSchema.parse(res.data);
+      setAuth(user, access_token);
       toast.success('logged in successfully');
     } catch (err) {
       if (err instanceof AxiosError) {
