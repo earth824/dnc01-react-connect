@@ -4,6 +4,8 @@ import z from 'zod';
 import { axios } from '../config/axios';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
+import { useAuthStore } from '../store/useAuthStore';
+import { userSchema } from '../types/user.type';
 
 const loginSchema = z.object({
   email: z.email(),
@@ -22,16 +24,21 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema)
   });
 
+  const setAuth = useAuthStore((state) => state.setAuth);
+
   const onSubmit: SubmitHandler<LoginInput> = async (data) => {
     // sent credentials to backend server
     try {
       const res = await axios.post('/auth/login', data);
+      const user = userSchema.parse(res.data.user);
+      setAuth(user);
       toast.success('logged in successfully');
     } catch (err) {
       if (err instanceof AxiosError) {
         toast.error(err.response?.data.message);
         return;
       }
+      console.log(err);
       toast.error('something went wrong. try again later.');
     }
   };
