@@ -5,15 +5,20 @@ import { axios } from '../config/axios';
 export default function Header() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   return (
     <header className="bg-amber-400 px-4 py-2 flex justify-between items-center">
       <div>Logo</div>
-      <div className="flex gap-4">
+      <div className="flex gap-4 items-center">
         {isAuthenticated ? (
           <>
             <Link to="/">Home</Link>
-            <Link to="/profile">Profile</Link>
+            <Link to="/profile">
+              <div className="size-10 rounded-full overflow-hidden">
+                <img src={user?.imageUrl} alt="" />
+              </div>
+            </Link>
             <button
               onClick={async () => {
                 await axios.post('/auth/logout');
