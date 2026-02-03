@@ -7,6 +7,7 @@ type AuthStore = {
   accessToken: string | null;
   setAuth: (user: User, accessToken: string) => void;
   clearAuth: () => void;
+  uploadProfileImage: (imageUrl: string) => void;
 };
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -16,5 +17,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   setAuth: (user, accessToken) =>
     set({ isAuthenticated: true, user, accessToken }),
   clearAuth: () =>
-    set({ isAuthenticated: false, user: null, accessToken: null })
+    set({ isAuthenticated: false, user: null, accessToken: null }),
+  uploadProfileImage: (imageUrl) =>
+    set((state) => ({ user: state.user ? { ...state.user, imageUrl } : null }))
 }));
