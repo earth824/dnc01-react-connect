@@ -7,8 +7,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchMe = async () => {
-      const res = await axios.get('/auth/me');
-      console.log(res);
+      try {
+        const res = await axios.get('/auth/me');
+        console.log('sucessssss', res);
+      } catch (err) {
+        console.log('tessssss errro', err);
+      }
     };
     if (accessToken) fetchMe();
   }, [accessToken]);
