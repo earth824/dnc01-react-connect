@@ -30,18 +30,18 @@ export default function LoginPage() {
     // sent credentials to backend server
     try {
       const res = await axios.post('/auth/login', data);
-      console.log('sucessssss', res);
-      // const { user, access_token } = loginResponseSchema.parse(res.data);
-      // setAuth(user, access_token);
-      // toast.success('logged in successfully');
+      // console.log('sucessssss', res);
+      const { user, access_token } = loginResponseSchema.parse(res.data);
+      setAuth(user, access_token);
+      toast.success('logged in successfully');
     } catch (err) {
-      console.log('tessssss errro', err);
-      // if (err instanceof AxiosError) {
-      //   toast.error(err.response?.data.message);
-      //   return;
-      // }
+      // console.log('tessssss errro', err);
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data.message);
+        return;
+      }
       // console.log(err);
-      // toast.error('something went wrong. try again later.');
+      toast.error('something went wrong. try again later.');
     }
   };
 
