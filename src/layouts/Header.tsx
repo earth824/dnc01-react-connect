@@ -17,6 +17,7 @@ export default function Header() {
     <header className="bg-amber-400 px-4 py-2 flex justify-between items-center">
       <div>Logo</div>
       <div className="flex gap-4 items-center">
+        <Link to="/todo">Todo</Link>
         {isAuthenticated ? (
           <>
             <Link to="/">Home</Link>

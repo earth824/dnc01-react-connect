@@ -5,6 +5,10 @@ import { useEffect, useState } from 'react';
 import { axios } from './config/axios';
 import { userSchema } from './types/user.type';
 import { useAuthStore } from './store/useAuthStore';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+const queryClient = new QueryClient();
 
 function App() {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -28,8 +32,11 @@ function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
-      <Toaster richColors />
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} />
+        <RouterProvider router={router} />
+        <Toaster richColors />
+      </QueryClientProvider>
     </>
   );
 }

@@ -6,6 +6,7 @@ import HomePage from '../pages/HomePage';
 import ProfilePage from '../pages/ProfilePage';
 import ProtectedRoute from '../layouts/ProtectedRoute';
 import PublicOnly from '../layouts/PublicOnly';
+import TodoPage from '../pages/TodoPage';
 
 // /profile
 export const router = createBrowserRouter([
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
     Component: MainLayout,
     children: [
       { path: 'contact', element: <h1>Contact Page</h1> },
+      { path: 'todo', Component: TodoPage },
       {
         Component: PublicOnly,
         children: [
