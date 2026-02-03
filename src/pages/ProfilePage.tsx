@@ -2,19 +2,58 @@
 // import { axios } from '../config/axios';
 // import { useAuthStore } from '../store/useAuthStore';
 
+import { useRef, useState } from 'react';
 import defaultImage from '../assets/user.png';
 
 export default function ProfilePage() {
+  // { current: null }
+  const fileInputEl = useRef<HTMLInputElement>(null);
+  const [image, setImage] = useState<File | null>(null);
+
+  const imageSrc = image ? URL.createObjectURL(image) : defaultImage;
+
+  const handleClickImage = () => {
+    fileInputEl.current?.click();
+  };
+
+  const handleChangeImage = (
+    e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>
+  ) => {
+    if (e.target.files) setImage(e.target.files[0]);
+  };
+
   return (
     <div>
       <div className="flex flex-col gap-6 items-center">
-        <div className="size-60 rounded-full">
-          <img src={defaultImage} alt="" />
+        <div
+          className="size-60 rounded-full overflow-hidden"
+          onClick={handleClickImage}
+        >
+          <img src={imageSrc} alt="" />
         </div>
-        <div className="flex gap-4">
-          <button className="px-4 py-2 bg-blue-500">Upload</button>
-          <button className="px-4 py-2 bg-gray-200">Cancel</button>
-        </div>
+        {/* { current: document.querySelector('input') } */}
+        <input
+          type="file"
+          ref={fileInputEl}
+          className="hidden"
+          onChange={handleChangeImage}
+        />
+        {image && (
+          <div className="flex gap-4">
+            <button className="px-4 py-2 bg-blue-500">Upload</button>
+            <button
+              className="px-4 py-2 bg-gray-200"
+              onClick={() => {
+                setImage(null);
+                if (fileInputEl.current) {
+                  fileInputEl.current.value = '';
+                }
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
